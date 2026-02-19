@@ -13,6 +13,7 @@ Built with **Electron + React + Vite**.
 - **Three-panel layout** — folder tree · note list · markdown editor
 - **Markdown support** — write in Markdown, toggle to live preview
 - **Status tracking** — tag notes as `Open`, `In Progress`, or `Done`
+- **Status filter** — filter the note list by status with one click
 - **Auto-save** — changes are saved automatically as you type (700 ms debounce)
 - **Configurable root folder** — point the app at any folder on your machine
 - **100 % offline** — nothing leaves your computer
@@ -91,8 +92,11 @@ The app window opens automatically. On first launch you will be prompted to **ch
 | Create a note | Click **+** in the note list header |
 | Open a note | Click on it |
 | Delete a note | Hover the note card → click **×** |
+| Filter by status | Click a filter pill: **All · Open · In Progress · Done** |
 
 Notes are sorted by last-modified date (newest first).
+
+Each filter pill shows the count of notes in that status. The header displays `filtered / total` when a filter is active and resets automatically when you switch folders.
 
 ### Note editor (right panel)
 
@@ -155,7 +159,7 @@ noteup/
             ├── App.jsx        Root component, state management
             ├── components/
             │   ├── Sidebar.jsx      Folder tree with context menus
-            │   ├── NoteList.jsx     Note cards with status badges
+            │   ├── NoteList.jsx     Note cards with status badges and filter bar
             │   ├── NoteEditor.jsx   Markdown editor + preview
             │   └── Settings.jsx     Root folder configuration
             └── styles/
@@ -171,6 +175,8 @@ noteup/
 | `npm run dev` | Start the app in development mode with hot reload |
 | `npm run build` | Build for production (output in `out/`) |
 | `npm run preview` | Preview the production build |
+| `npm run package` | Build + create Windows installer `.exe` (requires Developer Mode) |
+| `npm run package:portable` | Build + create portable `.exe` folder (no Developer Mode needed) |
 
 ---
 

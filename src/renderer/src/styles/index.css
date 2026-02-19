@@ -319,6 +319,51 @@ button {
   color: var(--c-text2);
 }
 
+.filter-bar {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--c-border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  background: none;
+  border: 1px solid var(--c-border2);
+  color: var(--c-text2);
+  border-radius: 20px;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.filter-pill:hover { border-color: var(--c-text2); color: var(--c-text0); }
+.filter-pill.active {
+  background: var(--c-accent-dim);
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+.filter-pill-count {
+  background: var(--c-bg3);
+  color: var(--c-text3);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 4px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+  line-height: 1.6;
+}
+.filter-pill.active .filter-pill-count { background: rgba(255,255,255,0.1); color: inherit; }
+
 .note-list-body {
   flex: 1;
   overflow-y: auto;

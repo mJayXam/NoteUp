@@ -80,6 +80,8 @@ The app window opens automatically. On first launch you will be prompted to **ch
 
 ### Folder tree (left panel)
 
+The root notes folder is not shown as a node — its subfolders appear directly as top-level entries in the sidebar. If no subfolders exist yet, a hint prompts you to create one.
+
 | Action | How |
 |---|---|
 | Select a folder | Click on it |

@@ -70,13 +70,12 @@ function ContextMenu({ x, y, items, onClose }) {
 // ── Folder Node ───────────────────────────────────────────────────────────────
 
 function FolderNode({ node, selectedFolderPath, onSelect, onCreateFolder, onRenameFolder, onDeleteFolder, depth }) {
-  const [expanded, setExpanded] = useState(depth === 0)
+  const [expanded, setExpanded] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [newName, setNewName] = useState(node.name)
   const [creatingChild, setCreatingChild] = useState(false)
   const [childName, setChildName] = useState('')
   const [menu, setMenu] = useState(null)
-  const isRoot = depth === 0
   const isSelected = selectedFolderPath === node.path
   const hasChildren = node.children.length > 0
 
@@ -95,25 +94,23 @@ function FolderNode({ node, selectedFolderPath, onSelect, onCreateFolder, onRena
         setChildName('')
       }
     },
-    ...(!isRoot ? [
-      {
-        label: 'Rename',
-        onClick: () => {
-          setRenaming(true)
-          setNewName(node.name)
-        }
-      },
-      'separator',
-      {
-        label: 'Delete Folder',
-        danger: true,
-        onClick: () => {
-          if (window.confirm(`Delete "${node.name}" and all its contents?`)) {
-            onDeleteFolder(node.path)
-          }
+    {
+      label: 'Rename',
+      onClick: () => {
+        setRenaming(true)
+        setNewName(node.name)
+      }
+    },
+    'separator',
+    {
+      label: 'Delete Folder',
+      danger: true,
+      onClick: () => {
+        if (window.confirm(`Delete "${node.name}" and all its contents?`)) {
+          onDeleteFolder(node.path)
         }
       }
-    ] : [])
+    }
   ]
 
   const handleRenameSubmit = (e) => {
@@ -168,7 +165,7 @@ function FolderNode({ node, selectedFolderPath, onSelect, onCreateFolder, onRena
             {hasChildren ? (expanded ? <IconChevronDown /> : <IconChevronRight />) : null}
           </span>
           <span className="folder-icon"><IconFolder /></span>
-          <span className="folder-name">{isRoot ? basename(node.path) : node.name}</span>
+          <span className="folder-name">{node.name}</span>
           {node.noteCount > 0 && (
             <span className="folder-badge">{node.noteCount}</span>
           )}
@@ -219,11 +216,6 @@ function FolderNode({ node, selectedFolderPath, onSelect, onCreateFolder, onRena
       )}
     </div>
   )
-}
-
-// small helper – not importing path here
-function basename(p) {
-  return p.replace(/\\/g, '/').split('/').filter(Boolean).pop() ?? p
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -282,9 +274,15 @@ export default function Sidebar({
       )}
 
       <div className="folder-tree">
-        {tree && (
+        {tree && tree.children.length === 0 && (
+          <p className="empty-hint" style={{ padding: '12px 16px', fontSize: '12px' }}>
+            No folders yet.<br />Press + New Folder to create one.
+          </p>
+        )}
+        {tree && tree.children.map((child) => (
           <FolderNode
-            node={tree}
+            key={child.path}
+            node={child}
             selectedFolderPath={selectedFolderPath}
             onSelect={onSelectFolder}
             onCreateFolder={onCreateFolder}
@@ -292,7 +290,7 @@ export default function Sidebar({
             onDeleteFolder={onDeleteFolder}
             depth={0}
           />
-        )}
+        ))}
       </div>
     </div>
   )

@@ -15,6 +15,9 @@ Built with **Electron + React + Vite**.
 - **Status tracking** — tag notes as `Open`, `In Progress`, or `Done`
 - **Status filter** — filter the note list by status with one click
 - **Auto-save** — changes are saved automatically as you type (700 ms debounce)
+- **Floating note windows** — double-click a note to open it in a compact standalone window
+- **Always-on-top pin** — pin any floating window to keep it above other applications
+- **Live cross-window sync** — edits in a floating window update the main editor instantly
 - **Configurable root folder** — point the app at any folder on your machine
 - **100 % offline** — nothing leaves your computer
 
@@ -91,6 +94,7 @@ The app window opens automatically. On first launch you will be prompted to **ch
 |---|---|
 | Create a note | Click **+** in the note list header |
 | Open a note | Click on it |
+| Open in floating window | Double-click on it |
 | Delete a note | Hover the note card → click **×** |
 | Filter by status | Click a filter pill: **All · Open · In Progress · Done** |
 
@@ -104,6 +108,18 @@ Each filter pill shows the count of notes in that status. The header displays `f
 - **Status** — use the dropdown to set `Open`, `In Progress`, or `Done`
 - **Edit / Preview** — toggle between the Markdown textarea and the rendered preview
 - **Auto-save** — no save button needed; changes are written to disk automatically
+
+### Floating note windows
+
+Double-clicking a note opens it in a compact standalone window (520 × 620 px). Each note can only have one floating window — double-clicking again focuses the existing window instead of opening a duplicate.
+
+| Control | Description |
+|---|---|
+| **Edit / Preview** toggle | Switch between Markdown input and rendered preview |
+| **Pin button** (📌) | Toggle always-on-top — the window stays above all other applications |
+| **Auto-save** | Same 700 ms debounce as the main editor |
+
+Changes made in a floating window are reflected in the main editor and note list in real time.
 
 ### Settings
 
@@ -158,12 +174,13 @@ noteup/
         └── src/
             ├── App.jsx        Root component, state management
             ├── components/
-            │   ├── Sidebar.jsx      Folder tree with context menus
-            │   ├── NoteList.jsx     Note cards with status badges and filter bar
-            │   ├── NoteEditor.jsx   Markdown editor + preview
-            │   └── Settings.jsx     Root folder configuration
+            │   ├── Sidebar.jsx          Folder tree with context menus
+            │   ├── NoteList.jsx         Note cards with status badges and filter bar
+            │   ├── NoteEditor.jsx       Markdown editor + preview
+            │   ├── FloatingNoteView.jsx Standalone note window (edit + pin)
+            │   └── Settings.jsx         Root folder configuration
             └── styles/
-                └── index.css        Dark theme (CSS custom properties)
+                └── index.css            Dark theme (CSS custom properties)
 ```
 
 ---
@@ -199,6 +216,12 @@ window.api.settings.get(key)
 window.api.settings.set(key, value)
 
 window.api.dialog.openFolder()               // → selected path or null
+
+window.api.floatingWindow.open(filePath)     // open or focus floating window
+window.api.floatingWindow.setAlwaysOnTop(bool)
+window.api.floatingWindow.noteSaved(filePath)
+
+window.api.onNoteUpdated(callback)           // → returns cleanup function
 ```
 
 ---

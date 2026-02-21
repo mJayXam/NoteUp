@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Sidebar from './components/Sidebar'
 import NoteList from './components/NoteList'
 import NoteEditor from './components/NoteEditor'
@@ -51,6 +51,23 @@ export default function App() {
     refreshNotes()
   }, [selectedFolderPath, refreshNotes])
 
+  // ── Cross-window sync ──────────────────────────────────────────────────────
+  // Ref always points to the latest handler — avoids stale closures in the
+  // ipcRenderer listener which is registered only once.
+  const onNoteUpdatedRef = useRef(null)
+  onNoteUpdatedRef.current = async (filePath) => {
+    await refreshNotes()
+    if (selectedNote?.filePath === filePath) {
+      const updated = await window.api.fs.getNote(filePath)
+      setSelectedNote(updated)
+    }
+  }
+
+  useEffect(() => {
+    const cleanup = window.api.onNoteUpdated((filePath) => onNoteUpdatedRef.current(filePath))
+    return cleanup
+  }, [])
+
   // ── Folder actions ─────────────────────────────────────────────────────────
 
   const handleSelectFolder = (path) => {
@@ -99,6 +116,10 @@ export default function App() {
     await refreshNotes()
     setSelectedNote(note)
   }
+
+  const handleOpenFloatingNote = useCallback((note) => {
+    window.api.floatingWindow.open(note.filePath)
+  }, [])
 
   const handleDeleteNote = async (filePath) => {
     await window.api.fs.deleteNote(filePath)
@@ -162,6 +183,7 @@ export default function App() {
           onSelectNote={handleSelectNote}
           onCreateNote={handleCreateNote}
           onDeleteNote={handleDeleteNote}
+          onDoubleClickNote={handleOpenFloatingNote}
         />
       </div>
 

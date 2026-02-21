@@ -72,3 +72,54 @@ ipcMain.handle('fs:deleteNote', (_, filePath) => deleteNote(filePath))
 ipcMain.handle('fs:createFolder', (_, args) => createFolder(args))
 ipcMain.handle('fs:renameFolder', (_, args) => renameFolder(args))
 ipcMain.handle('fs:deleteFolder', (_, folderPath) => deleteFolder(folderPath))
+
+// ── Floating window ───────────────────────────────────────────────────────────
+
+const floatingWindows = new Map() // filePath → BrowserWindow
+
+ipcMain.handle('floatingWindow:open', async (_, filePath) => {
+  const existing = floatingWindows.get(filePath)
+  if (existing && !existing.isDestroyed()) {
+    if (existing.isMinimized()) existing.restore()
+    existing.focus()
+    return
+  }
+
+  const floatWin = new BrowserWindow({
+    width: 520,
+    height: 620,
+    minWidth: 360,
+    minHeight: 300,
+    title: 'NoteUp – Note',
+    backgroundColor: '#1a1a2e',
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+    },
+  })
+  floatingWindows.set(filePath, floatWin)
+  floatWin.on('closed', () => floatingWindows.delete(filePath))
+
+  const encodedPath = encodeURIComponent(filePath)
+  if (process.env['ELECTRON_RENDERER_URL']) {
+    floatWin.loadURL(`${process.env['ELECTRON_RENDERER_URL']}?floating=1&path=${encodedPath}`)
+  } else {
+    floatWin.loadFile(join(__dirname, '../renderer/index.html'), {
+      query: { floating: '1', path: filePath },
+    })
+  }
+})
+
+ipcMain.handle('floatingWindow:setAlwaysOnTop', (event, value) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (win) win.setAlwaysOnTop(value)
+})
+
+ipcMain.handle('floatingWindow:noteSaved', (event, filePath) => {
+  BrowserWindow.getAllWindows().forEach((win) => {
+    if (win.webContents !== event.sender) {
+      win.webContents.send('note:updated', filePath)
+    }
+  })
+})

@@ -18,5 +18,15 @@ contextBridge.exposeInMainWorld('api', {
     createFolder: (args) => ipcRenderer.invoke('fs:createFolder', args),
     renameFolder: (args) => ipcRenderer.invoke('fs:renameFolder', args),
     deleteFolder: (folderPath) => ipcRenderer.invoke('fs:deleteFolder', folderPath)
+  },
+  floatingWindow: {
+    open: (filePath) => ipcRenderer.invoke('floatingWindow:open', filePath),
+    setAlwaysOnTop: (value) => ipcRenderer.invoke('floatingWindow:setAlwaysOnTop', value),
+    noteSaved: (filePath) => ipcRenderer.invoke('floatingWindow:noteSaved', filePath),
+  },
+  onNoteUpdated: (cb) => {
+    const wrapped = (_, filePath) => cb(filePath)
+    ipcRenderer.on('note:updated', wrapped)
+    return () => ipcRenderer.removeListener('note:updated', wrapped)
   }
 })

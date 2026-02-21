@@ -760,3 +760,66 @@ button {
 }
 .btn-primary:hover:not(:disabled) { background: var(--c-accent-h); }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Floating note view ──────────────────────────────────────────────────────── */
+
+.floating-view {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--c-bg2);
+}
+
+.floating-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--c-border);
+  background: #1a2234;
+  flex-shrink: 0;
+}
+
+.floating-title {
+  font-size: 15px !important;
+  width: 100% !important;
+}
+
+.floating-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pin-btn {
+  background: none;
+  border: 1px solid var(--c-border2);
+  color: var(--c-text2);
+  border-radius: var(--radius);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.pin-btn:hover {
+  color: var(--c-accent-h);
+  border-color: var(--c-accent);
+  background: var(--c-accent-dim);
+}
+.pin-btn.pinned {
+  color: var(--c-accent-h);
+  border-color: var(--c-accent);
+  background: var(--c-accent-dim);
+}
+
+.floating-path {
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

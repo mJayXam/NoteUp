@@ -25,7 +25,7 @@ export default function NoteEditor({ note, onNoteUpdated }) {
     setLocalStatus(note.status ?? 'open')
     setSaveState('saved')
     setMode('edit')
-  }, [note?.filePath])
+  }, [note?.filePath, note?.updatedAt])
 
   // Debounced save — captures filePath and values at call time
   const scheduleSave = (filePath, title, content, status) => {

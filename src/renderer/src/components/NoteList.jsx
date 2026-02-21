@@ -22,7 +22,7 @@ function StatusBadge({ status }) {
   )
 }
 
-function NoteItem({ note, isSelected, onSelect, onDelete }) {
+function NoteItem({ note, isSelected, onSelect, onDelete, onDoubleClick }) {
   const handleDelete = (e) => {
     e.stopPropagation()
     if (window.confirm('Delete this note?')) {
@@ -38,6 +38,7 @@ function NoteItem({ note, isSelected, onSelect, onDelete }) {
     <div
       className={`note-item ${isSelected ? 'selected' : ''}`}
       onClick={() => onSelect(note)}
+      onDoubleClick={() => onDoubleClick(note)}
     >
       <div className="note-item-top">
         <span className="note-item-title">{note.title || 'Untitled'}</span>
@@ -61,7 +62,8 @@ export default function NoteList({
   folderPath,
   onSelectNote,
   onCreateNote,
-  onDeleteNote
+  onDeleteNote,
+  onDoubleClickNote
 }) {
   const [activeFilter, setActiveFilter] = useState('all')
 
@@ -135,6 +137,7 @@ export default function NoteList({
               isSelected={selectedNote?.filePath === note.filePath}
               onSelect={onSelectNote}
               onDelete={onDeleteNote}
+              onDoubleClick={onDoubleClickNote}
             />
           ))
         )}

@@ -1,5 +1,9 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
+
+const iconPath = app.isPackaged
+  ? join(process.resourcesPath, 'Note.png')
+  : join(__dirname, '../../src/assets/Note.png')
 import { getSetting, setSetting } from './settings.js'
 import {
   getFolderTree,
@@ -21,6 +25,7 @@ function createWindow() {
     minHeight: 600,
     backgroundColor: '#1a1a2e',
     autoHideMenuBar: true,
+    icon: iconPath,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -94,6 +99,7 @@ ipcMain.handle('floatingWindow:open', async (_, filePath) => {
     title: 'NoteUp – Note',
     backgroundColor: '#1a1a2e',
     autoHideMenuBar: true,
+    icon: iconPath,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,

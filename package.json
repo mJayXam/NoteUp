@@ -8,7 +8,7 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "package": "electron-vite build && electron-builder",
-    "package:portable": "electron-vite build && electron-packager . NoteUp --platform=win32 --arch=x64 --out=dist --overwrite --ignore=\"(^/src|^/.git|^/dist|^/node_modules)\" --electron-version=28.3.3"
+    "package:portable": "electron-vite build && electron-packager . NoteUp --platform=win32 --arch=x64 --out=dist --overwrite --ignore=\"(^/src|^/.git|^/dist|^/node_modules)\" --electron-version=28.3.3 --icon=src/assets/Note.ico --extra-resource=src/assets/Note.png"
   },
   "build": {
     "appId": "com.mjayx.noteup",
@@ -20,7 +20,14 @@
     "directories": {
       "output": "dist"
     },
+    "extraResources": [
+      {
+        "from": "src/assets/Note.png",
+        "to": "Note.png"
+      }
+    ],
     "win": {
+      "icon": "src/assets/Note.ico",
       "target": [
         {
           "target": "nsis",

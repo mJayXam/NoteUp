@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
+import pinIcon from '../../../assets/pin.png'
 
 const STATUS_OPTIONS = [
   { value: 'open', label: 'Open', color: '#e05252' },
@@ -126,9 +127,7 @@ export default function FloatingNoteView({ filePath }) {
             onClick={handleTogglePin}
             title={pinned ? 'Unpin window' : 'Keep window on top'}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill={pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L8 6H4l4 4-4 8 8-4 4 4V6l-4-4z" />
-            </svg>
+            <img src={pinIcon} width="14" height="14" alt="" style={{ opacity: pinned ? 1 : 0.5 }} />
           </button>
         </div>
       </div>

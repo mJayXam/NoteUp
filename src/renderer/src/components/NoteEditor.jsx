@@ -25,15 +25,15 @@ export default function NoteEditor({ note, onNoteUpdated }) {
     setLocalStatus(note.status ?? 'open')
     setSaveState('saved')
     setMode('edit')
-  }, [note?.filePath, note?.updatedAt])
+  }, [note?.id, note?.updatedAt])
 
-  // Debounced save — captures filePath and values at call time
-  const scheduleSave = (filePath, title, content, status) => {
+  // Debounced save — captures folderPath and noteId at call time
+  const scheduleSave = (folderPath, noteId, title, content, status) => {
     if (timerRef.current) clearTimeout(timerRef.current)
     setSaveState('saving')
     timerRef.current = setTimeout(async () => {
       try {
-        await window.api.fs.updateNote({ filePath, title, content, status })
+        await window.api.fs.updateNote({ folderPath, noteId, title, content, status })
         setSaveState('saved')
         onNoteUpdated()
       } catch (err) {
@@ -46,13 +46,13 @@ export default function NoteEditor({ note, onNoteUpdated }) {
   const handleTitleChange = (e) => {
     const val = e.target.value
     setLocalTitle(val)
-    scheduleSave(note.filePath, val, localContent, localStatus)
+    scheduleSave(note.folderPath, note.id, val, localContent, localStatus)
   }
 
   const handleContentChange = (e) => {
     const val = e.target.value
     setLocalContent(val)
-    scheduleSave(note.filePath, localTitle, val, localStatus)
+    scheduleSave(note.folderPath, note.id, localTitle, val, localStatus)
   }
 
   const handleStatusChange = (e) => {
@@ -61,7 +61,7 @@ export default function NoteEditor({ note, onNoteUpdated }) {
     // Status change saves immediately
     if (timerRef.current) clearTimeout(timerRef.current)
     window.api.fs
-      .updateNote({ filePath: note.filePath, title: localTitle, content: localContent, status: val })
+      .updateNote({ folderPath: note.folderPath, noteId: note.id, title: localTitle, content: localContent, status: val })
       .then(() => { setSaveState('saved'); onNoteUpdated() })
   }
 

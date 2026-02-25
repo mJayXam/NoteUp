@@ -52,19 +52,17 @@ export default function App() {
   }, [selectedFolderPath, refreshNotes])
 
   // ── Cross-window sync ──────────────────────────────────────────────────────
-  // Ref always points to the latest handler — avoids stale closures in the
-  // ipcRenderer listener which is registered only once.
   const onNoteUpdatedRef = useRef(null)
-  onNoteUpdatedRef.current = async (filePath) => {
+  onNoteUpdatedRef.current = async ({ folderPath, noteId }) => {
     await refreshNotes()
-    if (selectedNote?.filePath === filePath) {
-      const updated = await window.api.fs.getNote(filePath)
+    if (selectedNote?.id === noteId) {
+      const updated = await window.api.fs.getNote(folderPath, noteId)
       setSelectedNote(updated)
     }
   }
 
   useEffect(() => {
-    const cleanup = window.api.onNoteUpdated((filePath) => onNoteUpdatedRef.current(filePath))
+    const cleanup = window.api.onNoteUpdated((payload) => onNoteUpdatedRef.current(payload))
     return cleanup
   }, [])
 
@@ -82,7 +80,7 @@ export default function App() {
 
   const handleRenameFolder = async (folderPath, newName) => {
     await window.api.fs.renameFolder({ folderPath, newName })
-    if (selectedFolderPath === folderPath || selectedFolderPath?.startsWith(folderPath)) {
+    if (selectedFolderPath === folderPath) {
       setSelectedFolderPath(null)
       setSelectedNote(null)
     }
@@ -91,7 +89,7 @@ export default function App() {
 
   const handleDeleteFolder = async (folderPath) => {
     await window.api.fs.deleteFolder(folderPath)
-    if (selectedFolderPath === folderPath || selectedFolderPath?.startsWith(folderPath)) {
+    if (selectedFolderPath === folderPath) {
       setSelectedFolderPath(null)
       setSelectedNote(null)
     }
@@ -101,7 +99,7 @@ export default function App() {
   // ── Note actions ───────────────────────────────────────────────────────────
 
   const handleSelectNote = async (note) => {
-    const full = await window.api.fs.getNote(note.filePath)
+    const full = await window.api.fs.getNote(note.folderPath, note.id)
     setSelectedNote(full)
   }
 
@@ -118,12 +116,12 @@ export default function App() {
   }
 
   const handleOpenFloatingNote = useCallback((note) => {
-    window.api.floatingWindow.open(note.filePath)
+    window.api.floatingWindow.open({ folderPath: note.folderPath, noteId: note.id })
   }, [])
 
-  const handleDeleteNote = async (filePath) => {
-    await window.api.fs.deleteNote(filePath)
-    if (selectedNote?.filePath === filePath) setSelectedNote(null)
+  const handleDeleteNote = async ({ folderPath, noteId }) => {
+    await window.api.fs.deleteNote({ folderPath, noteId })
+    if (selectedNote?.id === noteId) setSelectedNote(null)
     await refreshNotes()
     await refreshFolderTree()
   }

@@ -11,21 +11,21 @@ contextBridge.exposeInMainWorld('api', {
   fs: {
     getFolderTree: (rootPath) => ipcRenderer.invoke('fs:getFolderTree', rootPath),
     getNotes: (folderPath) => ipcRenderer.invoke('fs:getNotes', folderPath),
-    getNote: (filePath) => ipcRenderer.invoke('fs:getNote', filePath),
+    getNote: (folderPath, noteId) => ipcRenderer.invoke('fs:getNote', folderPath, noteId),
     createNote: (args) => ipcRenderer.invoke('fs:createNote', args),
     updateNote: (args) => ipcRenderer.invoke('fs:updateNote', args),
-    deleteNote: (filePath) => ipcRenderer.invoke('fs:deleteNote', filePath),
+    deleteNote: (args) => ipcRenderer.invoke('fs:deleteNote', args),
     createFolder: (args) => ipcRenderer.invoke('fs:createFolder', args),
     renameFolder: (args) => ipcRenderer.invoke('fs:renameFolder', args),
     deleteFolder: (folderPath) => ipcRenderer.invoke('fs:deleteFolder', folderPath)
   },
   floatingWindow: {
-    open: (filePath) => ipcRenderer.invoke('floatingWindow:open', filePath),
+    open: ({ folderPath, noteId }) => ipcRenderer.invoke('floatingWindow:open', { folderPath, noteId }),
     setAlwaysOnTop: (value) => ipcRenderer.invoke('floatingWindow:setAlwaysOnTop', value),
-    noteSaved: (filePath) => ipcRenderer.invoke('floatingWindow:noteSaved', filePath),
+    noteSaved: ({ folderPath, noteId }) => ipcRenderer.invoke('floatingWindow:noteSaved', { folderPath, noteId }),
   },
   onNoteUpdated: (cb) => {
-    const wrapped = (_, filePath) => cb(filePath)
+    const wrapped = (_, payload) => cb(payload)
     ipcRenderer.on('note:updated', wrapped)
     return () => ipcRenderer.removeListener('note:updated', wrapped)
   }

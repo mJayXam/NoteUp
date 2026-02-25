@@ -10,7 +10,7 @@ const STATUS_OPTIONS = [
 
 const SAVE_DELAY = 700
 
-export default function FloatingNoteView({ filePath }) {
+export default function FloatingNoteView({ folderPath, noteId }) {
   const [note, setNote] = useState(null)
   const [mode, setMode] = useState('edit')
   const [localTitle, setLocalTitle] = useState('')
@@ -21,24 +21,24 @@ export default function FloatingNoteView({ filePath }) {
   const timerRef = useRef(null)
 
   useEffect(() => {
-    if (!filePath) return
-    window.api.fs.getNote(filePath).then((n) => {
+    if (!folderPath || !noteId) return
+    window.api.fs.getNote(folderPath, noteId).then((n) => {
       if (!n) return
       setNote(n)
       setLocalTitle(n.title ?? '')
       setLocalContent(n.content ?? '')
       setLocalStatus(n.status ?? 'open')
     })
-  }, [filePath])
+  }, [folderPath, noteId])
 
   const scheduleSave = (title, content, status) => {
     if (timerRef.current) clearTimeout(timerRef.current)
     setSaveState('saving')
     timerRef.current = setTimeout(async () => {
       try {
-        await window.api.fs.updateNote({ filePath, title, content, status })
+        await window.api.fs.updateNote({ folderPath, noteId, title, content, status })
         setSaveState('saved')
-        window.api.floatingWindow.noteSaved(filePath)
+        window.api.floatingWindow.noteSaved({ folderPath, noteId })
       } catch (err) {
         console.error('Save failed', err)
         setSaveState('saved')
@@ -63,8 +63,8 @@ export default function FloatingNoteView({ filePath }) {
     setLocalStatus(val)
     if (timerRef.current) clearTimeout(timerRef.current)
     window.api.fs
-      .updateNote({ filePath, title: localTitle, content: localContent, status: val })
-      .then(() => { setSaveState('saved'); window.api.floatingWindow.noteSaved(filePath) })
+      .updateNote({ folderPath, noteId, title: localTitle, content: localContent, status: val })
+      .then(() => { setSaveState('saved'); window.api.floatingWindow.noteSaved({ folderPath, noteId }) })
   }
 
   const handleTogglePin = async () => {
@@ -82,6 +82,7 @@ export default function FloatingNoteView({ filePath }) {
   }
 
   const statusColor = STATUS_OPTIONS.find((s) => s.value === localStatus)?.color ?? '#e05252'
+  const folderName = folderPath ? folderPath.split(/[\\/]/).pop().replace(/\.json$/i, '') : ''
 
   return (
     <div className="floating-view">
@@ -151,8 +152,8 @@ export default function FloatingNoteView({ filePath }) {
 
       {/* Footer */}
       <div className="editor-footer">
-        <span className="editor-meta floating-path" title={filePath}>
-          {filePath.split(/[\\/]/).pop()}
+        <span className="editor-meta floating-path" title={folderPath}>
+          {folderName}
         </span>
         <span className={`save-indicator ${saveState}`}>
           {saveState === 'saving' ? 'Saving…' : 'Saved'}

@@ -26,7 +26,7 @@ function NoteItem({ note, isSelected, onSelect, onDelete, onDoubleClick }) {
   const handleDelete = (e) => {
     e.stopPropagation()
     if (window.confirm('Delete this note?')) {
-      onDelete(note.filePath)
+      onDelete({ folderPath: note.folderPath, noteId: note.id })
     }
   }
 
@@ -132,9 +132,9 @@ export default function NoteList({
         ) : (
           filtered.map((note) => (
             <NoteItem
-              key={note.filePath}
+              key={note.id}
               note={note}
-              isSelected={selectedNote?.filePath === note.filePath}
+              isSelected={selectedNote?.id === note.id}
               onSelect={onSelectNote}
               onDelete={onDeleteNote}
               onDoubleClick={onDoubleClickNote}

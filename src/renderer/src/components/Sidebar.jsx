@@ -2,22 +2,6 @@ import React, { useState, useEffect, useRef } from 'react'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
-function IconChevronRight() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-      <path d="M3 2l4 3-4 3V2z" />
-    </svg>
-  )
-}
-
-function IconChevronDown() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-      <path d="M2 3l3 4 3-4H2z" />
-    </svg>
-  )
-}
-
 function IconFolder() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
@@ -69,15 +53,11 @@ function ContextMenu({ x, y, items, onClose }) {
 
 // ── Folder Node ───────────────────────────────────────────────────────────────
 
-function FolderNode({ node, selectedFolderPath, onSelect, onCreateFolder, onRenameFolder, onDeleteFolder, depth }) {
-  const [expanded, setExpanded] = useState(false)
+function FolderNode({ node, selectedFolderPath, onSelect, onRenameFolder, onDeleteFolder }) {
   const [renaming, setRenaming] = useState(false)
   const [newName, setNewName] = useState(node.name)
-  const [creatingChild, setCreatingChild] = useState(false)
-  const [childName, setChildName] = useState('')
   const [menu, setMenu] = useState(null)
   const isSelected = selectedFolderPath === node.path
-  const hasChildren = node.children.length > 0
 
   const handleContextMenu = (e) => {
     e.preventDefault()
@@ -86,14 +66,6 @@ function FolderNode({ node, selectedFolderPath, onSelect, onCreateFolder, onRena
   }
 
   const menuItems = [
-    {
-      label: 'New Subfolder',
-      onClick: () => {
-        setExpanded(true)
-        setCreatingChild(true)
-        setChildName('')
-      }
-    },
     {
       label: 'Rename',
       onClick: () => {
@@ -106,7 +78,7 @@ function FolderNode({ node, selectedFolderPath, onSelect, onCreateFolder, onRena
       label: 'Delete Folder',
       danger: true,
       onClick: () => {
-        if (window.confirm(`Delete "${node.name}" and all its contents?`)) {
+        if (window.confirm(`Delete "${node.name}" and all its notes?`)) {
           onDeleteFolder(node.path)
         }
       }
@@ -122,26 +94,10 @@ function FolderNode({ node, selectedFolderPath, onSelect, onCreateFolder, onRena
     setRenaming(false)
   }
 
-  const handleCreateChildSubmit = (e) => {
-    e?.preventDefault()
-    const trimmed = childName.trim()
-    if (trimmed) {
-      onCreateFolder(node.path, trimmed)
-    }
-    setCreatingChild(false)
-    setChildName('')
-  }
-
-  const indent = depth * 16
-
   return (
     <div className="folder-node">
       {renaming ? (
-        <form
-          onSubmit={handleRenameSubmit}
-          className="inline-form"
-          style={{ paddingLeft: indent + 8 }}
-        >
+        <form onSubmit={handleRenameSubmit} className="inline-form" style={{ paddingLeft: 8 }}>
           <input
             className="inline-input"
             autoFocus
@@ -154,16 +110,10 @@ function FolderNode({ node, selectedFolderPath, onSelect, onCreateFolder, onRena
       ) : (
         <div
           className={`folder-row ${isSelected ? 'selected' : ''}`}
-          style={{ paddingLeft: indent }}
-          onClick={() => {
-            onSelect(node.path)
-            if (hasChildren || !isSelected) setExpanded((v) => !v)
-          }}
+          onClick={() => onSelect(node.path)}
           onContextMenu={handleContextMenu}
         >
-          <span className="folder-chevron">
-            {hasChildren ? (expanded ? <IconChevronDown /> : <IconChevronRight />) : null}
-          </span>
+          <span className="folder-chevron" />
           <span className="folder-icon"><IconFolder /></span>
           <span className="folder-name">{node.name}</span>
           {node.noteCount > 0 && (
@@ -179,40 +129,6 @@ function FolderNode({ node, selectedFolderPath, onSelect, onCreateFolder, onRena
           items={menuItems}
           onClose={() => setMenu(null)}
         />
-      )}
-
-      {expanded && (
-        <div className="folder-children">
-          {node.children.map((child) => (
-            <FolderNode
-              key={child.path}
-              node={child}
-              selectedFolderPath={selectedFolderPath}
-              onSelect={onSelect}
-              onCreateFolder={onCreateFolder}
-              onRenameFolder={onRenameFolder}
-              onDeleteFolder={onDeleteFolder}
-              depth={depth + 1}
-            />
-          ))}
-          {creatingChild && (
-            <form
-              onSubmit={handleCreateChildSubmit}
-              className="inline-form"
-              style={{ paddingLeft: (depth + 1) * 16 + 8 }}
-            >
-              <input
-                className="inline-input"
-                autoFocus
-                placeholder="Folder name..."
-                value={childName}
-                onChange={(e) => setChildName(e.target.value)}
-                onBlur={() => { if (!childName.trim()) setCreatingChild(false); else handleCreateChildSubmit() }}
-                onKeyDown={(e) => e.key === 'Escape' && setCreatingChild(false)}
-              />
-            </form>
-          )}
-        </div>
       )}
     </div>
   )
@@ -274,21 +190,19 @@ export default function Sidebar({
       )}
 
       <div className="folder-tree">
-        {tree && tree.children.length === 0 && (
+        {tree && tree.length === 0 && (
           <p className="empty-hint" style={{ padding: '12px 16px', fontSize: '12px' }}>
             No folders yet.<br />Press + New Folder to create one.
           </p>
         )}
-        {tree && tree.children.map((child) => (
+        {tree && tree.map((node) => (
           <FolderNode
-            key={child.path}
-            node={child}
+            key={node.path}
+            node={node}
             selectedFolderPath={selectedFolderPath}
             onSelect={onSelectFolder}
-            onCreateFolder={onCreateFolder}
             onRenameFolder={onRenameFolder}
             onDeleteFolder={onDeleteFolder}
-            depth={0}
           />
         ))}
       </div>

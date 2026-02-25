@@ -71,20 +71,21 @@ ipcMain.handle('dialog:openFolder', async () => {
 
 ipcMain.handle('fs:getFolderTree', (_, rootPath) => getFolderTree(rootPath))
 ipcMain.handle('fs:getNotes', (_, folderPath) => getNotesInFolder(folderPath))
-ipcMain.handle('fs:getNote', (_, filePath) => getNote(filePath))
+ipcMain.handle('fs:getNote', (_, folderPath, noteId) => getNote(folderPath, noteId))
 ipcMain.handle('fs:createNote', (_, args) => createNote(args))
 ipcMain.handle('fs:updateNote', (_, args) => updateNote(args))
-ipcMain.handle('fs:deleteNote', (_, filePath) => deleteNote(filePath))
+ipcMain.handle('fs:deleteNote', (_, args) => deleteNote(args))
 ipcMain.handle('fs:createFolder', (_, args) => createFolder(args))
 ipcMain.handle('fs:renameFolder', (_, args) => renameFolder(args))
 ipcMain.handle('fs:deleteFolder', (_, folderPath) => deleteFolder(folderPath))
 
 // ── Floating window ───────────────────────────────────────────────────────────
 
-const floatingWindows = new Map() // filePath → BrowserWindow
+const floatingWindows = new Map() // `${folderPath}::${noteId}` → BrowserWindow
 
-ipcMain.handle('floatingWindow:open', async (_, filePath) => {
-  const existing = floatingWindows.get(filePath)
+ipcMain.handle('floatingWindow:open', async (_, { folderPath, noteId }) => {
+  const key = `${folderPath}::${noteId}`
+  const existing = floatingWindows.get(key)
   if (existing && !existing.isDestroyed()) {
     if (existing.isMinimized()) existing.restore()
     existing.focus()
@@ -105,15 +106,17 @@ ipcMain.handle('floatingWindow:open', async (_, filePath) => {
       sandbox: false,
     },
   })
-  floatingWindows.set(filePath, floatWin)
-  floatWin.on('closed', () => floatingWindows.delete(filePath))
+  floatingWindows.set(key, floatWin)
+  floatWin.on('closed', () => floatingWindows.delete(key))
 
-  const encodedPath = encodeURIComponent(filePath)
+  const encodedFolder = encodeURIComponent(folderPath)
   if (process.env['ELECTRON_RENDERER_URL']) {
-    floatWin.loadURL(`${process.env['ELECTRON_RENDERER_URL']}?floating=1&path=${encodedPath}`)
+    floatWin.loadURL(
+      `${process.env['ELECTRON_RENDERER_URL']}?floating=1&folderPath=${encodedFolder}&noteId=${encodeURIComponent(noteId)}`
+    )
   } else {
     floatWin.loadFile(join(__dirname, '../renderer/index.html'), {
-      query: { floating: '1', path: filePath },
+      query: { floating: '1', folderPath, noteId },
     })
   }
 })
@@ -123,10 +126,10 @@ ipcMain.handle('floatingWindow:setAlwaysOnTop', (event, value) => {
   if (win) win.setAlwaysOnTop(value)
 })
 
-ipcMain.handle('floatingWindow:noteSaved', (event, filePath) => {
+ipcMain.handle('floatingWindow:noteSaved', (event, { folderPath, noteId }) => {
   BrowserWindow.getAllWindows().forEach((win) => {
     if (win.webContents !== event.sender) {
-      win.webContents.send('note:updated', filePath)
+      win.webContents.send('note:updated', { folderPath, noteId })
     }
   })
 })

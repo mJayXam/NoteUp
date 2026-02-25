@@ -5,10 +5,9 @@ import {
   readFileSync,
   writeFileSync,
   unlinkSync,
-  renameSync,
-  rmSync
+  renameSync
 } from 'fs'
-import { join, basename, dirname } from 'path'
+import { join, dirname } from 'path'
 import { randomUUID } from 'crypto'
 
 // ── Folder tree ──────────────────────────────────────────────────────────────
@@ -17,67 +16,66 @@ export function getFolderTree(rootPath) {
   if (!existsSync(rootPath)) {
     mkdirSync(rootPath, { recursive: true })
   }
-  return buildTree(rootPath)
-}
 
-function buildTree(folderPath) {
-  const name = basename(folderPath)
-  const children = []
-  let noteCount = 0
-
+  const folders = []
   try {
-    const entries = readdirSync(folderPath, { withFileTypes: true })
+    const entries = readdirSync(rootPath, { withFileTypes: true })
     for (const entry of entries) {
-      if (entry.isDirectory() && !entry.name.startsWith('.')) {
-        children.push(buildTree(join(folderPath, entry.name)))
-      } else if (entry.isFile() && entry.name.endsWith('.json')) {
-        noteCount++
+      if (entry.isFile() && entry.name.endsWith('.json')) {
+        const folderPath = join(rootPath, entry.name)
+        const name = entry.name.slice(0, -5) // strip .json
+        let noteCount = 0
+        try {
+          const data = JSON.parse(readFileSync(folderPath, 'utf-8'))
+          noteCount = Array.isArray(data.notes) ? data.notes.length : 0
+        } catch {
+          // skip malformed files
+        }
+        folders.push({ name, path: folderPath, noteCount })
       }
     }
   } catch {
     // ignore permission errors
   }
 
-  children.sort((a, b) => a.name.localeCompare(b.name))
-  return { name, path: folderPath, children, noteCount }
+  folders.sort((a, b) => a.name.localeCompare(b.name))
+  return folders
+}
+
+// ── Internal helpers ─────────────────────────────────────────────────────────
+
+function readNotes(folderPath) {
+  try {
+    const data = JSON.parse(readFileSync(folderPath, 'utf-8'))
+    return Array.isArray(data.notes) ? data.notes : []
+  } catch {
+    return []
+  }
+}
+
+function writeNotes(folderPath, notes) {
+  writeFileSync(folderPath, JSON.stringify({ notes }, null, 2), 'utf-8')
 }
 
 // ── Notes ────────────────────────────────────────────────────────────────────
 
 export function getNotesInFolder(folderPath) {
   if (!existsSync(folderPath)) return []
-
-  const notes = []
-  try {
-    const entries = readdirSync(folderPath, { withFileTypes: true })
-    for (const entry of entries) {
-      if (entry.isFile() && entry.name.endsWith('.json')) {
-        const filePath = join(folderPath, entry.name)
-        try {
-          const data = JSON.parse(readFileSync(filePath, 'utf-8'))
-          notes.push({ ...data, filePath })
-        } catch {
-          // skip malformed files
-        }
-      }
-    }
-  } catch {
-    // ignore
-  }
-
-  return notes.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+  const notes = readNotes(folderPath)
+  return notes
+    .map((n) => ({ ...n, folderPath }))
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
 }
 
-export function getNote(filePath) {
-  const data = JSON.parse(readFileSync(filePath, 'utf-8'))
-  return { ...data, filePath }
+export function getNote(folderPath, noteId) {
+  const notes = readNotes(folderPath)
+  const note = notes.find((n) => n.id === noteId)
+  if (!note) return null
+  return { ...note, folderPath }
 }
 
 export function createNote({ folderPath, title, content = '', status = 'open' }) {
-  if (!existsSync(folderPath)) {
-    mkdirSync(folderPath, { recursive: true })
-  }
-
+  const notes = readNotes(folderPath)
   const id = randomUUID()
   const now = new Date().toISOString()
   const note = {
@@ -88,45 +86,45 @@ export function createNote({ folderPath, title, content = '', status = 'open' })
     createdAt: now,
     updatedAt: now
   }
-
-  const filePath = join(folderPath, `${id}.json`)
-  writeFileSync(filePath, JSON.stringify(note, null, 2), 'utf-8')
-  return { ...note, filePath }
+  notes.push(note)
+  writeNotes(folderPath, notes)
+  return { ...note, folderPath }
 }
 
-export function updateNote({ filePath, title, content, status }) {
-  const existing = JSON.parse(readFileSync(filePath, 'utf-8'))
-  const updated = {
-    ...existing,
+export function updateNote({ folderPath, noteId, title, content, status }) {
+  const notes = readNotes(folderPath)
+  const idx = notes.findIndex((n) => n.id === noteId)
+  if (idx === -1) throw new Error(`Note ${noteId} not found in ${folderPath}`)
+  notes[idx] = {
+    ...notes[idx],
     ...(title !== undefined && { title }),
     ...(content !== undefined && { content }),
     ...(status !== undefined && { status }),
     updatedAt: new Date().toISOString()
   }
-  writeFileSync(filePath, JSON.stringify(updated, null, 2), 'utf-8')
-  return { ...updated, filePath }
+  writeNotes(folderPath, notes)
+  return { ...notes[idx], folderPath }
 }
 
-export function deleteNote(filePath) {
-  if (existsSync(filePath)) {
-    unlinkSync(filePath)
-  }
+export function deleteNote({ folderPath, noteId }) {
+  const notes = readNotes(folderPath)
+  writeNotes(folderPath, notes.filter((n) => n.id !== noteId))
 }
 
 // ── Folders ──────────────────────────────────────────────────────────────────
 
 export function createFolder({ parentPath, name }) {
-  const folderPath = join(parentPath, name)
-  mkdirSync(folderPath, { recursive: true })
+  const folderPath = join(parentPath, `${name}.json`)
+  writeFileSync(folderPath, JSON.stringify({ notes: [] }, null, 2), 'utf-8')
   return { path: folderPath, name }
 }
 
 export function renameFolder({ folderPath, newName }) {
-  const newPath = join(dirname(folderPath), newName)
+  const newPath = join(dirname(folderPath), `${newName}.json`)
   renameSync(folderPath, newPath)
   return { newPath }
 }
 
 export function deleteFolder(folderPath) {
-  rmSync(folderPath, { recursive: true, force: true })
+  unlinkSync(folderPath)
 }

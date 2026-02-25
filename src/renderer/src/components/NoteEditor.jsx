@@ -55,6 +55,23 @@ export default function NoteEditor({ note, onNoteUpdated }) {
     scheduleSave(note.folderPath, note.id, localTitle, val, localStatus)
   }
 
+  const handleContentKeyDown = (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      const el = e.target
+      const start = el.selectionStart
+      const end = el.selectionEnd
+      const spaces = '\t'
+      const newVal = localContent.slice(0, start) + spaces + localContent.slice(end)
+      setLocalContent(newVal)
+      scheduleSave(note.folderPath, note.id, localTitle, newVal, localStatus)
+      // Cursor hinter den eingefügten Leerzeichen platzieren
+      requestAnimationFrame(() => {
+        el.selectionStart = el.selectionEnd = start + spaces.length
+      })
+    }
+  }
+
   const handleStatusChange = (e) => {
     const val = e.target.value
     setLocalStatus(val)
@@ -91,6 +108,7 @@ export default function NoteEditor({ note, onNoteUpdated }) {
           value={localStatus}
           onChange={handleStatusChange}
           style={{ borderColor: statusColor, color: statusColor }}
+          tabIndex={-1}
         >
           {STATUS_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -103,12 +121,14 @@ export default function NoteEditor({ note, onNoteUpdated }) {
           <button
             className={`mode-btn ${mode === 'edit' ? 'active' : ''}`}
             onClick={() => setMode('edit')}
+            tabIndex={-1}
           >
             Edit
           </button>
           <button
             className={`mode-btn ${mode === 'preview' ? 'active' : ''}`}
             onClick={() => setMode('preview')}
+            tabIndex={-1}
           >
             Preview
           </button>
@@ -122,6 +142,7 @@ export default function NoteEditor({ note, onNoteUpdated }) {
             className="editor-textarea"
             value={localContent}
             onChange={handleContentChange}
+            onKeyDown={handleContentKeyDown}
             placeholder="Write in Markdown..."
             spellCheck={false}
           />

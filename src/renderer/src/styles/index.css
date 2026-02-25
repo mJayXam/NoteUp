@@ -548,6 +548,7 @@ button {
   padding: 24px 28px;
   resize: none;
   outline: none;
+  tab-size: 4;
 }
 .editor-textarea::placeholder { color: var(--c-text3); }
 

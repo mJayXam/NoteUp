@@ -119,6 +119,11 @@ export default function App() {
     window.api.floatingWindow.open({ folderPath: note.folderPath, noteId: note.id })
   }, [])
 
+  const handleReorderNotes = async (orderedIds) => {
+    await window.api.fs.reorderNotes({ folderPath: selectedFolderPath, orderedIds })
+    await refreshNotes()
+  }
+
   const handleDeleteNote = async ({ folderPath, noteId }) => {
     await window.api.fs.deleteNote({ folderPath, noteId })
     if (selectedNote?.id === noteId) setSelectedNote(null)
@@ -181,6 +186,7 @@ export default function App() {
           onSelectNote={handleSelectNote}
           onCreateNote={handleCreateNote}
           onDeleteNote={handleDeleteNote}
+          onReorderNotes={handleReorderNotes}
           onDoubleClickNote={handleOpenFloatingNote}
         />
       </div>

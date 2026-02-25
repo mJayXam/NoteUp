@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('api', {
     createNote: (args) => ipcRenderer.invoke('fs:createNote', args),
     updateNote: (args) => ipcRenderer.invoke('fs:updateNote', args),
     deleteNote: (args) => ipcRenderer.invoke('fs:deleteNote', args),
+    reorderNotes: (args) => ipcRenderer.invoke('fs:reorderNotes', args),
     createFolder: (args) => ipcRenderer.invoke('fs:createFolder', args),
     renameFolder: (args) => ipcRenderer.invoke('fs:renameFolder', args),
     deleteFolder: (folderPath) => ipcRenderer.invoke('fs:deleteFolder', folderPath)

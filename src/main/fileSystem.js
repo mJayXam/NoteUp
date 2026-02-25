@@ -61,10 +61,7 @@ function writeNotes(folderPath, notes) {
 
 export function getNotesInFolder(folderPath) {
   if (!existsSync(folderPath)) return []
-  const notes = readNotes(folderPath)
-  return notes
-    .map((n) => ({ ...n, folderPath }))
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+  return readNotes(folderPath).map((n) => ({ ...n, folderPath }))
 }
 
 export function getNote(folderPath, noteId) {
@@ -86,7 +83,7 @@ export function createNote({ folderPath, title, content = '', status = 'open' })
     createdAt: now,
     updatedAt: now
   }
-  notes.push(note)
+  notes.unshift(note)
   writeNotes(folderPath, notes)
   return { ...note, folderPath }
 }
@@ -109,6 +106,14 @@ export function updateNote({ folderPath, noteId, title, content, status }) {
 export function deleteNote({ folderPath, noteId }) {
   const notes = readNotes(folderPath)
   writeNotes(folderPath, notes.filter((n) => n.id !== noteId))
+}
+
+export function reorderNotes({ folderPath, orderedIds }) {
+  const notes = readNotes(folderPath)
+  const noteMap = new Map(notes.map((n) => [n.id, n]))
+  const reordered = orderedIds.map((id) => noteMap.get(id)).filter(Boolean)
+  const remaining = notes.filter((n) => !orderedIds.includes(n.id))
+  writeNotes(folderPath, [...reordered, ...remaining])
 }
 
 // ── Folders ──────────────────────────────────────────────────────────────────

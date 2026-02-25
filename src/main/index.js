@@ -12,6 +12,7 @@ import {
   createNote,
   updateNote,
   deleteNote,
+  reorderNotes,
   createFolder,
   renameFolder,
   deleteFolder
@@ -75,6 +76,7 @@ ipcMain.handle('fs:getNote', (_, folderPath, noteId) => getNote(folderPath, note
 ipcMain.handle('fs:createNote', (_, args) => createNote(args))
 ipcMain.handle('fs:updateNote', (_, args) => updateNote(args))
 ipcMain.handle('fs:deleteNote', (_, args) => deleteNote(args))
+ipcMain.handle('fs:reorderNotes', (_, args) => reorderNotes(args))
 ipcMain.handle('fs:createFolder', (_, args) => createFolder(args))
 ipcMain.handle('fs:renameFolder', (_, args) => renameFolder(args))
 ipcMain.handle('fs:deleteFolder', (_, folderPath) => deleteFolder(folderPath))

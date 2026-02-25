@@ -373,7 +373,10 @@ button {
 /* ── Note item ──────────────────────────────────────────────────────────────── */
 
 .note-item {
-  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 8px;
   border-radius: var(--radius);
   cursor: pointer;
   margin-bottom: 3px;
@@ -382,6 +385,24 @@ button {
 }
 .note-item:hover { background: var(--c-bg3); }
 .note-item.selected { background: var(--c-accent-dim); border-color: var(--c-accent); }
+.note-item.drag-over { border-color: var(--c-accent); background: var(--c-accent-dim); }
+.note-item.dragging { opacity: 0.4; }
+
+.drag-handle {
+  flex-shrink: 0;
+  color: var(--c-text3);
+  opacity: 0;
+  cursor: grab;
+  transition: opacity 0.15s;
+  margin-right: 4px;
+}
+.note-item:hover .drag-handle { opacity: 1; }
+.drag-handle:active { cursor: grabbing; }
+
+.note-item-content {
+  flex: 1;
+  min-width: 0;
+}
 
 .note-item-top {
   display: flex;

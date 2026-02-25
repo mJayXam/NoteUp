@@ -22,7 +22,11 @@ function StatusBadge({ status }) {
   )
 }
 
-function NoteItem({ note, isSelected, onSelect, onDelete, onDoubleClick }) {
+function NoteItem({
+  note, isSelected, isDraggable, isDragging, isDragOver,
+  onSelect, onDelete, onDoubleClick,
+  onDragStart, onDragOver, onDrop, onDragEnd
+}) {
   const handleDelete = (e) => {
     e.stopPropagation()
     if (window.confirm('Delete this note?')) {
@@ -36,21 +40,38 @@ function NoteItem({ note, isSelected, onSelect, onDelete, onDoubleClick }) {
 
   return (
     <div
-      className={`note-item ${isSelected ? 'selected' : ''}`}
+      className={`note-item${isSelected ? ' selected' : ''}${isDragOver ? ' drag-over' : ''}${isDragging ? ' dragging' : ''}`}
+      draggable={isDraggable}
+      onDragStart={isDraggable ? onDragStart : undefined}
+      onDragOver={isDraggable ? onDragOver : undefined}
+      onDrop={isDraggable ? onDrop : undefined}
+      onDragEnd={isDraggable ? onDragEnd : undefined}
       onClick={() => onSelect(note)}
       onDoubleClick={() => onDoubleClick(note)}
     >
-      <div className="note-item-top">
-        <span className="note-item-title">{note.title || 'Untitled'}</span>
-        <button className="note-delete-btn" onClick={handleDelete} title="Delete note">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </button>
-      </div>
-      <div className="note-item-bottom">
-        <StatusBadge status={note.status} />
-        <span className="note-item-date">{date}</span>
+      {isDraggable && (
+        <svg className="drag-handle" width="10" height="14" viewBox="0 0 10 14" aria-hidden="true">
+          <circle cx="3" cy="2.5"  r="1.5" fill="currentColor" />
+          <circle cx="7" cy="2.5"  r="1.5" fill="currentColor" />
+          <circle cx="3" cy="7"    r="1.5" fill="currentColor" />
+          <circle cx="7" cy="7"    r="1.5" fill="currentColor" />
+          <circle cx="3" cy="11.5" r="1.5" fill="currentColor" />
+          <circle cx="7" cy="11.5" r="1.5" fill="currentColor" />
+        </svg>
+      )}
+      <div className="note-item-content">
+        <div className="note-item-top">
+          <span className="note-item-title">{note.title || 'Untitled'}</span>
+          <button className="note-delete-btn" onClick={handleDelete} title="Delete note">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div className="note-item-bottom">
+          <StatusBadge status={note.status} />
+          <span className="note-item-date">{date}</span>
+        </div>
       </div>
     </div>
   )
@@ -63,9 +84,13 @@ export default function NoteList({
   onSelectNote,
   onCreateNote,
   onDeleteNote,
+  onReorderNotes,
   onDoubleClickNote
 }) {
   const [activeFilter, setActiveFilter] = useState('all')
+  const [dragSrcId, setDragSrcId] = useState(null)
+  const [dragOverId, setDragOverId] = useState(null)
+  const canDrag = activeFilter === 'all'
 
   // Reset filter when switching folders
   useEffect(() => {
@@ -85,6 +110,39 @@ export default function NoteList({
     : notes.filter((n) => n.status === activeFilter)
 
   const countFor = (val) => val === 'all' ? notes.length : notes.filter((n) => n.status === val).length
+
+  const handleDragStart = (e, noteId) => {
+    setDragSrcId(noteId)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e, noteId) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (noteId !== dragSrcId) setDragOverId(noteId)
+  }
+
+  const handleDrop = (e, noteId) => {
+    e.preventDefault()
+    if (!dragSrcId || dragSrcId === noteId) {
+      setDragSrcId(null)
+      setDragOverId(null)
+      return
+    }
+    const srcIdx = notes.findIndex((n) => n.id === dragSrcId)
+    const dstIdx = notes.findIndex((n) => n.id === noteId)
+    const reordered = [...notes]
+    const [moved] = reordered.splice(srcIdx, 1)
+    reordered.splice(dstIdx, 0, moved)
+    onReorderNotes(reordered.map((n) => n.id))
+    setDragSrcId(null)
+    setDragOverId(null)
+  }
+
+  const handleDragEnd = () => {
+    setDragSrcId(null)
+    setDragOverId(null)
+  }
 
   return (
     <div className="note-list">
@@ -135,9 +193,16 @@ export default function NoteList({
               key={note.id}
               note={note}
               isSelected={selectedNote?.id === note.id}
+              isDraggable={canDrag}
+              isDragging={dragSrcId === note.id}
+              isDragOver={dragOverId === note.id}
               onSelect={onSelectNote}
               onDelete={onDeleteNote}
               onDoubleClick={onDoubleClickNote}
+              onDragStart={(e) => handleDragStart(e, note.id)}
+              onDragOver={(e) => handleDragOver(e, note.id)}
+              onDrop={(e) => handleDrop(e, note.id)}
+              onDragEnd={handleDragEnd}
             />
           ))
         )}
